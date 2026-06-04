@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulator buchen – Fahrschule Lohrmann</title>
+<link rel="stylesheet" href="style.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{font-family:'Inter',sans-serif}
+.hero-gradient{background:linear-gradient(135deg,#0f2847 0%,#153d73 50%,#1e5399 100%)}
+.card-gradient{background:linear-gradient(135deg,#0f2847 0%,#153d73 60%,#1e5399 100%)}
+.day-cell{min-height:56px;transition:all .15s;cursor:pointer}
+.day-cell:hover{background:#f8fafc}
+.day-cell.today{background:#fffbeb;outline:2px solid #f59e0b;outline-offset:-1px}
+.day-cell.selected{background:#e8f0fa;outline:2px solid #2e6fbf;outline-offset:-1px}
+.day-cell.disabled{opacity:.3;pointer-events:none;cursor:default}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeInUp .3s ease-out both}
+.success-check{animation:fadeInUp .4s ease-out both}
+</style>
+</head>
+<body class="bg-slate-50 antialiased">
+
+<!-- HEADER -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-primary-800 shadow-xl">
+  <div class="mx-auto max-w-7xl px-6 flex h-16 items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-lg">FL</div>
+      <div><span class="text-white font-bold text-lg leading-none block">Fahrschule</span><span class="text-amber-400 font-semibold text-xs tracking-widest">LOHRMANN</span></div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Start</a>
+      <a href="kurse.html" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Kurse</a>
+      <a href="simulator.html" class="px-4 py-2 rounded-lg text-sm font-medium bg-white/10 text-white">Simulator</a>
+    </nav>
+    <a href="kurse.html" class="hidden sm:inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 transition-all">Jetzt buchen</a>
+  </div>
+</header>
+
+<!-- PAGE HEADER -->
+<div class="hero-gradient text-white py-14 px-6 pt-[4.5rem]">
+  <div class="mx-auto max-w-7xl">
+    <div class="flex items-center gap-2 text-slate-400 text-sm mb-3">
+      <a href="index.html" class="hover:text-white transition-colors">Start</a><span>›</span><span class="text-white">Simulator buchen</span>
+    </div>
+    <h1 class="text-4xl font-extrabold">Fahrsimulator buchen</h1>
+    <p class="mt-2 text-slate-300 text-lg max-w-xl">Wählen Sie Ihren Wunschtermin und bezahlen Sie sicher online. Sofortbestätigung per E-Mail.</p>
+    <div class="mt-5 flex flex-wrap gap-5 text-sm">
+      <span class="flex items-center gap-2 text-slate-300">⚡ Sofortbestätigung</span>
+      <span class="flex items-center gap-2 text-slate-300">🔒 Sichere Zahlung (SSL)</span>
+      <span class="flex items-center gap-2 text-slate-300">↩ Kostenlose Stornierung bis 24h vorher</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN (shown/hidden based on step) -->
+<div id="main-view" class="mx-auto max-w-7xl px-6 py-10">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Left -->
+    <div class="lg:col-span-2 space-y-6">
+
+      <!-- Mini Calendar -->
+      <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <button onclick="prevM()" class="rounded-lg p-2 hover:bg-slate-100 transition-colors">
+            <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <h2 id="cal-month" class="text-base font-bold text-primary-800">Juni 2026</h2>
+          <button onclick="nextM()" class="rounded-lg p-2 hover:bg-slate-100 transition-colors">
+            <svg class="h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="grid grid-cols-7">
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">Mo</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">Di</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">Mi</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">Do</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fr</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-red-400">Sa</div>
+          <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-red-400">So</div>
+        </div>
+        <div id="sim-cal" class="grid grid-cols-7"></div>
+      </div>
+
+      <!-- Time Slots -->
+      <div id="slots-container" class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 p-5 hidden anim">
+        <h3 class="font-bold text-primary-800 mb-1">Verfügbare Zeiten – <span id="slots-date-label"></span></h3>
+        <p class="text-xs text-slate-400 mb-4">Wählen Sie Ihren Wunschtermin (je 60 Minuten)</p>
+        <div id="slots-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
+        <div class="mt-4 flex items-center gap-5 text-[11px] text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded ring-1 ring-emerald-100 inline-block bg-emerald-50"></span>Verfügbar</span>
+          <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded inline-block bg-amber-500"></span>Ausgewählt</span>
+          <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded inline-block bg-slate-100"></span>Belegt</span>
+        </div>
+      </div>
+
+      <div id="no-day" class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 p-8 flex flex-col items-center justify-center text-center text-slate-300">
+        <svg class="h-14 w-14 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <p class="text-slate-400 font-medium">Wählen Sie zuerst einen Tag im Kalender</p>
+        <p class="text-sm text-slate-300 mt-1">Wochentage Mo–Fr sind buchbar</p>
+      </div>
+    </div>
+
+    <!-- Right: Booking Form -->
+    <div class="space-y-5">
+      <!-- Summary -->
+      <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
+        <div class="bg-primary-800 px-5 py-4"><h3 class="font-bold text-white text-sm">Buchungsübersicht</h3></div>
+        <div class="p-5 space-y-3 text-sm">
+          <div class="flex justify-between items-center"><span class="text-slate-400">Service</span><span class="font-semibold text-primary-800">Fahrsimulator (60 min)</span></div>
+          <div class="flex justify-between items-center"><span class="text-slate-400">Datum</span><span id="sum-date" class="font-semibold text-slate-300">– nicht gewählt –</span></div>
+          <div class="flex justify-between items-center"><span class="text-slate-400">Uhrzeit</span><span id="sum-time" class="font-semibold text-slate-300">– nicht gewählt –</span></div>
+          <div class="border-t border-slate-100 pt-3 flex justify-between items-center">
+            <span class="font-bold text-slate-700">Gesamtbetrag</span>
+            <span id="sum-price" class="text-xl font-extrabold text-slate-300">–</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step indicators -->
+      <div class="flex items-center gap-3 text-xs font-semibold">
+        <div id="step-ind-1" class="flex items-center gap-2 flex-1">
+          <div class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 bg-primary-800 text-white">1</div>
+          <span class="text-primary-800">Angaben</span>
+        </div>
+        <div class="flex-1 h-px bg-slate-200"></div>
+        <div id="step-ind-2" class="flex items-center gap-2 flex-1">
+          <div id="step2-num" class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 bg-slate-200 text-slate-500">2</div>
+          <span id="step2-label" class="text-slate-400">Zahlung</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Personal Details -->
+      <div id="form-step1" class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 p-5 space-y-4">
+        <h3 class="font-bold text-primary-800">Ihre Angaben</h3>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vollständiger Name *</label>
+          <input id="f-name" type="text" placeholder="Max Mustermann" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">E-Mail *</label>
+          <input id="f-email" type="email" placeholder="max@beispiel.de" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telefon</label>
+          <input type="tel" placeholder="0123 456789" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Führerscheinklasse</label>
+          <select class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition bg-white">
+            <option>Klasse B</option><option>Klasse A</option><option>Klasse A2</option><option>Klasse BE</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Anmerkungen (optional)</label>
+          <textarea placeholder="z.B. Fahranfänger, besondere Wünsche..." rows="2" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition resize-none"></textarea>
+        </div>
+        <button id="to-payment-btn" onclick="goToPayment()" disabled class="w-full rounded-xl bg-primary-800 py-3.5 text-sm font-semibold text-white transition-all hover:bg-primary-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+          Weiter zur Zahlung →
+        </button>
+        <p id="step1-hint" class="text-xs text-center text-slate-400">Bitte wählen Sie zuerst einen Termin im Kalender</p>
+      </div>
+
+      <!-- Step 2: Payment (hidden initially) -->
+      <div id="form-step2" class="hidden space-y-4 anim">
+        <!-- Credit Card Visual -->
+        <div class="card-gradient relative rounded-2xl p-6 text-white shadow-2xl overflow-hidden">
+          <div class="absolute -top-10 -right-10 h-48 w-48 rounded-full bg-white/5 pointer-events-none"></div>
+          <div class="absolute bottom-0 right-12 h-32 w-32 rounded-full bg-white/5 pointer-events-none"></div>
+          <div class="flex justify-between items-start mb-6 relative z-10">
+            <div>
+              <p class="text-[10px] text-white/50 uppercase tracking-widest">Fahrschule Lohrmann</p>
+              <p class="text-sm font-bold text-white/90 mt-0.5">Simulator Buchung</p>
+            </div>
+            <div class="flex gap-1"><div class="h-6 w-6 rounded-full bg-red-400/80"></div><div class="h-6 w-6 rounded-full bg-amber-400/80 -ml-2"></div></div>
+          </div>
+          <div id="card-num-display" class="font-mono text-xl font-bold tracking-widest text-white/90 relative z-10 mb-5">•••• •••• •••• ••••</div>
+          <div class="flex justify-between items-end relative z-10">
+            <div><p class="text-[9px] text-white/40 uppercase tracking-widest">Karteninhaber</p><p id="card-holder-display" class="text-sm font-semibold text-white/90">–</p></div>
+            <div><p class="text-[9px] text-white/40 uppercase tracking-widest">Gültig bis</p><p id="card-expiry-display" class="text-sm font-semibold text-white/90">MM/JJ</p></div>
+            <div class="text-right"><p class="text-[9px] text-white/40 uppercase tracking-widest">Betrag</p><p class="text-sm font-bold text-amber-400">35 €</p></div>
+          </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 p-5 space-y-4">
+          <h3 class="font-bold text-primary-800 flex items-center gap-2">
+            <svg class="h-4 w-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Sichere Zahlung
+          </h3>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Karteninhaber</label>
+            <input id="c-holder" type="text" placeholder="Max Mustermann" oninput="updateCard()" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Kartennummer</label>
+            <div class="relative">
+              <input id="c-number" type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCardNum(this);updateCard()" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 pr-12 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+              <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1"><div class="h-4 w-4 rounded-full bg-red-400"></div><div class="h-4 w-4 rounded-full bg-amber-400 -ml-2"></div></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Ablaufdatum</label>
+              <input id="c-expiry" type="text" placeholder="MM/JJ" maxlength="5" oninput="formatExpiry(this);updateCard()" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">CVC</label>
+              <input id="c-cvc" type="text" placeholder="• • •" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+            </div>
+          </div>
+          <div class="rounded-xl bg-slate-50 p-4 text-sm">
+            <div class="flex justify-between"><span class="text-slate-500">Fahrsimulator (60 Min)</span><span class="font-semibold">35,00 €</span></div>
+            <div class="flex justify-between text-xs text-slate-400 mt-1"><span>inkl. 19% MwSt.</span><span>5,55 €</span></div>
+            <div class="border-t border-slate-200 mt-3 pt-3 flex justify-between font-bold"><span>Gesamt</span><span class="text-amber-600 text-base">35,00 €</span></div>
+          </div>
+          <div class="flex gap-3">
+            <button onclick="backToForm()" class="flex-1 rounded-xl border-2 border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:border-slate-300 transition">← Zurück</button>
+            <button onclick="doPayment()" class="flex-grow rounded-xl bg-amber-500 py-3 text-sm font-bold text-white hover:bg-amber-600 transition shadow-lg shadow-amber-200">🔒 Jetzt 35 € bezahlen</button>
+          </div>
+          <p class="text-center text-[10px] text-slate-400">Ihre Zahlungsdaten werden SSL-verschlüsselt übertragen.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS VIEW -->
+<div id="success-view" class="hidden flex items-center justify-center min-h-[60vh] px-6 py-20">
+  <div class="max-w-md w-full text-center success-check">
+    <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 mb-6">
+      <svg class="h-10 w-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h2 class="text-2xl font-extrabold text-primary-800">Buchung bestätigt!</h2>
+    <p class="mt-3 text-slate-500">Ihre Simulator-Stunde wurde erfolgreich gebucht und bezahlt.</p>
+    <div class="mt-6 rounded-2xl bg-white ring-1 ring-slate-100 p-5 text-sm text-left space-y-2 shadow-sm">
+      <div class="flex justify-between"><span class="text-slate-400">Buchungs-Nr.</span><span id="booking-nr" class="font-mono font-semibold text-primary-800">FL-12345</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Datum</span><span id="success-date" class="font-semibold text-primary-800">–</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Uhrzeit</span><span id="success-time" class="font-semibold text-primary-800">–</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Teilnehmer</span><span id="success-name" class="font-semibold text-primary-800">–</span></div>
+      <div class="border-t border-slate-100 pt-2 flex justify-between"><span class="font-semibold">Bezahlt</span><span class="font-bold text-emerald-600">35,00 €</span></div>
+    </div>
+    <p class="mt-4 text-xs text-slate-400">Bestätigung wurde per E-Mail gesendet.</p>
+    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="index.html" class="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary-800 px-6 py-3 text-sm font-semibold text-primary-800 hover:bg-primary-800 hover:text-white transition-all">Zur Startseite</a>
+      <button onclick="resetAll()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-6 py-3 text-sm font-bold text-white hover:bg-amber-600 transition-all shadow">Weiteren Termin buchen</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-primary-900 text-slate-300 mt-10">
+  <div class="mx-auto max-w-7xl px-6 py-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-lg">FL</div>
+        <div><span class="text-white font-bold text-lg leading-none block">Fahrschule</span><span class="text-amber-400 font-semibold text-xs tracking-widest">LOHRMANN</span></div>
+      </div>
+      <p class="text-sm text-slate-500">© 2026 Fahrschule Lohrmann. Alle Rechte vorbehalten.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+const MONTHS=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const TIMES=['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00'];
+const OCCUPIED={
+  '2026-6-4':['09:00','10:00','14:00'],
+  '2026-6-5':['08:00','11:00','15:00','16:00'],
+  '2026-6-6':['09:00','13:00'],
+  '2026-6-9':['10:00','11:00','16:00','17:00'],
+  '2026-6-10':['08:00','14:00'],
+  '2026-6-11':['09:00','15:00','18:00'],
+  '2026-6-12':['10:00','11:00','12:00'],
+};
+
+let cur={year:2026,month:5};
+let selDay=null, selSlot=null;
+
+function key(y,m,d){return `${y}-${m+1}-${d}`;}
+function todayKey(){const t=new Date();return key(t.getFullYear(),t.getMonth(),t.getDate());}
+
+function prevM(){if(cur.month===0){cur.year--;cur.month=11;}else cur.month--;renderCal();}
+function nextM(){if(cur.month===11){cur.year++;cur.month=0;}else cur.month++;renderCal();}
+
+function renderCal(){
+  document.getElementById('cal-month').textContent=`${MONTHS[cur.month]} ${cur.year}`;
+  const grid=document.getElementById('sim-cal');
+  grid.innerHTML='';
+  const dim=new Date(cur.year,cur.month+1,0).getDate();
+  const rf=new Date(cur.year,cur.month,1).getDay();
+  const start=(rf+6)%7;
+  const tk=todayKey();
+  const today=new Date();
+
+  const pm=cur.month===0?11:cur.month-1;
+  const py=cur.month===0?cur.year-1:cur.year;
+  const dprev=new Date(py,pm+1,0).getDate();
+  for(let i=start-1;i>=0;i--){
+    const c=document.createElement('div');
+    c.className='day-cell disabled border-r border-b border-slate-100 p-1 flex flex-col items-center pt-1.5';
+    c.innerHTML=`<span class="text-xs text-slate-300">${dprev-i}</span>`;
+    grid.appendChild(c);
+  }
+  for(let d=1;d<=dim;d++){
+    const k=key(cur.year,cur.month,d);
+    const isToday=k===tk;
+    const isSel=k===selDay;
+    const idx=start+(d-1);
+    const isWeekend=idx%7>=5;
+    const dDate=new Date(cur.year,cur.month,d);
+    const isPast=dDate<new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const isDisabled=isWeekend||isPast;
+    const occ=OCCUPIED[k]||[];
+    const free=TIMES.length-occ.length;
+
+    const c=document.createElement('div');
+    c.className=`day-cell border-r border-b border-slate-100 p-1 flex flex-col items-center pt-1.5${isToday?' today':''}${isSel?' selected':''}${isDisabled?' disabled':''}`;
+    if(!isDisabled) c.onclick=()=>selectDay(k);
+    c.innerHTML=`
+      <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${isToday?'bg-amber-500 text-white':'text-slate-700'}">${d}</span>
+      ${!isDisabled?`<span class="text-[8px] text-emerald-600 font-semibold">${free} frei</span>`:''}`;
+    grid.appendChild(c);
+  }
+  const nm=cur.month===11?0:cur.month+1;
+  const ny=cur.month===11?cur.year+1:cur.year;
+  while(grid.children.length<42){
+    const i=grid.children.length-start-dim+1;
+    const c=document.createElement('div');
+    c.className='day-cell disabled border-r border-b border-slate-100 p-1 flex flex-col items-center pt-1.5';
+    c.innerHTML=`<span class="text-xs text-slate-300">${i}</span>`;
+    grid.appendChild(c);
+  }
+}
+
+function selectDay(k){
+  selDay=k; selSlot=null;
+  renderCal();
+  const [y,m,d]=k.split('-').map(Number);
+  const label=`${d}. ${MONTHS[m-1]} ${y}`;
+  document.getElementById('slots-date-label').textContent=label;
+  document.getElementById('no-day').classList.add('hidden');
+  document.getElementById('slots-container').classList.remove('hidden');
+  renderSlots(k);
+  updateSummary();
+  checkStep1();
+}
+
+function renderSlots(k){
+  const occ=OCCUPIED[k]||[];
+  const grid=document.getElementById('slots-grid');
+  grid.innerHTML='';
+  TIMES.forEach(t=>{
+    const occupied=occ.includes(t);
+    const sel=selSlot===t;
+    const btn=document.createElement('button');
+    btn.disabled=occupied;
+    if(!occupied) btn.onclick=()=>{selSlot=sel?null:t;renderSlots(k);updateSummary();checkStep1();};
+    btn.className=`rounded-xl py-3 text-sm font-semibold transition-all ${occupied?'bg-slate-100 text-slate-300 cursor-not-allowed':sel?'bg-amber-500 text-white ring-2 ring-amber-300 shadow-lg scale-105':'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:scale-105'}`;
+    btn.innerHTML=`${t}<div class="text-[9px] font-normal mt-0.5 opacity-75">${occupied?'Belegt':sel?'Gewählt':'Frei'}</div>`;
+    grid.appendChild(btn);
+  });
+}
+
+function updateSummary(){
+  const sumDate=document.getElementById('sum-date');
+  const sumTime=document.getElementById('sum-time');
+  const sumPrice=document.getElementById('sum-price');
+  if(selDay){
+    const [y,m,d]=selDay.split('-').map(Number);
+    sumDate.textContent=`${d}. ${MONTHS[m-1]} ${y}`;
+    sumDate.className='font-semibold text-primary-800';
+  }else{sumDate.textContent='– nicht gewählt –';sumDate.className='font-semibold text-slate-300';}
+  if(selSlot){
+    const h=parseInt(selSlot)+1;
+    sumTime.textContent=`${selSlot} – ${String(h).padStart(2,'0')}:00 Uhr`;
+    sumTime.className='font-semibold text-primary-800';
+    sumPrice.textContent='35,00 €';sumPrice.className='text-xl font-extrabold text-amber-600';
+  }else{sumTime.textContent='– nicht gewählt –';sumTime.className='font-semibold text-slate-300';sumPrice.textContent='–';sumPrice.className='text-xl font-extrabold text-slate-300';}
+}
+
+function checkStep1(){
+  const ok=selDay&&selSlot;
+  document.getElementById('to-payment-btn').disabled=!ok;
+  document.getElementById('step1-hint').style.display=ok?'none':'block';
+}
+
+function goToPayment(){
+  document.getElementById('form-step1').classList.add('hidden');
+  document.getElementById('form-step2').classList.remove('hidden');
+  document.getElementById('step2-num').className='flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 bg-primary-800 text-white';
+  document.getElementById('step2-label').className='text-primary-800';
+}
+
+function backToForm(){
+  document.getElementById('form-step2').classList.add('hidden');
+  document.getElementById('form-step1').classList.remove('hidden');
+  document.getElementById('step2-num').className='flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shrink-0 bg-slate-200 text-slate-500';
+  document.getElementById('step2-label').className='text-slate-400';
+}
+
+function doPayment(){
+  const name=document.getElementById('f-name').value||'Max Mustermann';
+  const [y,m,d]=selDay.split('-').map(Number);
+  const h=parseInt(selSlot)+1;
+  document.getElementById('success-date').textContent=`${d}. ${MONTHS[m-1]} ${y}`;
+  document.getElementById('success-time').textContent=`${selSlot} – ${String(h).padStart(2,'0')}:00 Uhr`;
+  document.getElementById('success-name').textContent=name;
+  document.getElementById('booking-nr').textContent=`FL-${Math.floor(10000+Math.random()*90000)}`;
+  document.getElementById('main-view').classList.add('hidden');
+  document.getElementById('success-view').classList.remove('hidden');
+  document.getElementById('success-view').classList.add('flex');
+}
+
+function resetAll(){
+  selDay=null;selSlot=null;
+  document.getElementById('main-view').classList.remove('hidden');
+  document.getElementById('success-view').classList.add('hidden');
+  document.getElementById('success-view').classList.remove('flex');
+  document.getElementById('form-step2').classList.add('hidden');
+  document.getElementById('form-step1').classList.remove('hidden');
+  backToForm();
+  document.getElementById('slots-container').classList.add('hidden');
+  document.getElementById('no-day').classList.remove('hidden');
+  renderCal();
+  updateSummary();
+  checkStep1();
+}
+
+function formatCardNum(el){
+  el.value=el.value.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();
+}
+function formatExpiry(el){
+  const d=el.value.replace(/\D/g,'').slice(0,4);
+  el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
+}
+function updateCard(){
+  const h=document.getElementById('c-holder').value;
+  const n=document.getElementById('c-number').value;
+  const e=document.getElementById('c-expiry').value;
+  document.getElementById('card-holder-display').textContent=h||'–';
+  document.getElementById('card-num-display').textContent=n||'•••• •••• •••• ••••';
+  document.getElementById('card-expiry-display').textContent=e||'MM/JJ';
+}
+
+renderCal();
+</script>
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kurskalender – Fahrschule Lohrmann</title>
+<link rel="stylesheet" href="style.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{font-family:'Inter',sans-serif}
+.hero-gradient{background:linear-gradient(135deg,#0f2847 0%,#153d73 50%,#1e5399 100%)}
+.day-cell{min-height:90px;transition:all .15s;cursor:pointer}
+.day-cell:hover{background:#f8fafc}
+.day-cell.today{background:#fffbeb;outline:2px solid #f59e0b;outline-offset:-1px}
+.day-cell.selected{background:#e8f0fa;outline:2px solid #2e6fbf;outline-offset:-1px}
+.day-cell.other{opacity:.35;pointer-events:none}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:50;display:flex;align-items:center;justify-content:center;padding:1rem}
+@keyframes slideIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-box{animation:slideIn .2s ease-out}
+</style>
+</head>
+<body class="bg-slate-50 antialiased">
+
+<!-- HEADER -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-primary-800 shadow-xl">
+  <div class="mx-auto max-w-7xl px-6 flex h-16 items-center justify-between">
+    <a href="index.html" class="flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-lg">FL</div>
+      <div><span class="text-white font-bold text-lg leading-none block">Fahrschule</span><span class="text-amber-400 font-semibold text-xs tracking-widest">LOHRMANN</span></div>
+    </a>
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="index.html" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Start</a>
+      <a href="kurse.html" class="px-4 py-2 rounded-lg text-sm font-medium bg-white/10 text-white">Kurse</a>
+      <a href="simulator.html" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors">Simulator</a>
+    </nav>
+    <a href="kurse.html" class="hidden sm:inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 transition-all">Jetzt buchen</a>
+  </div>
+</header>
+
+<!-- PAGE HEADER -->
+<div class="hero-gradient text-white py-14 px-6 pt-[4.5rem]">
+  <div class="mx-auto max-w-7xl">
+    <div class="flex items-center gap-2 text-slate-400 text-sm mb-3">
+      <a href="index.html" class="hover:text-white transition-colors">Start</a><span>›</span><span class="text-white">Kurskalender</span>
+    </div>
+    <h1 class="text-4xl font-extrabold">Kurskalender</h1>
+    <p class="mt-2 text-slate-300 text-lg max-w-xl">Wählen Sie einen Termin und buchen Sie direkt online. Plätze sind begrenzt!</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="mx-auto max-w-7xl px-6 py-10">
+
+  <!-- Filter -->
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <span class="text-sm font-medium text-slate-500">Filter:</span>
+    <button onclick="setFilter('all')" id="f-all" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-primary-800 text-white transition-all">Alle</button>
+    <button onclick="setFilter('theory')" id="f-theory" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300 transition-all">Theorie</button>
+    <button onclick="setFilter('firstaid')" id="f-firstaid" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300 transition-all">Erste Hilfe</button>
+    <button onclick="setFilter('eye')" id="f-eye" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300 transition-all">Sehtest</button>
+    <button onclick="setFilter('exam')" id="f-exam" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300 transition-all">Prüfung</button>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <!-- Calendar -->
+    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <button onclick="prevMonth()" class="rounded-lg p-2 hover:bg-slate-100 transition-colors">
+          <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <h2 id="month-label" class="text-lg font-bold text-primary-800">Juni 2026</h2>
+        <button onclick="nextMonth()" class="rounded-lg p-2 hover:bg-slate-100 transition-colors">
+          <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <!-- Day names -->
+      <div class="grid grid-cols-7 border-b border-slate-100">
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Mo</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Di</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Mi</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Do</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-400">Fr</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-red-400">Sa</div>
+        <div class="py-2 text-center text-xs font-semibold uppercase tracking-wider text-red-400">So</div>
+      </div>
+      <div id="cal-grid" class="grid grid-cols-7"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="flex flex-col gap-4">
+      <!-- Selected day -->
+      <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 overflow-hidden flex-1">
+        <div class="px-5 py-4 border-b border-slate-100">
+          <h3 id="sel-date-label" class="font-bold text-primary-800">Termin auswählen</h3>
+          <p id="sel-count" class="text-xs text-slate-400 mt-0.5">Klicken Sie auf einen Tag im Kalender</p>
+        </div>
+        <div id="event-list" class="p-4 space-y-3">
+          <div class="flex flex-col items-center justify-center py-10 text-slate-300">
+            <svg class="h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <p class="text-sm text-center">Wählen Sie einen Termin im Kalender aus</p>
+          </div>
+        </div>
+      </div>
+      <!-- Month list -->
+      <div class="bg-white rounded-2xl shadow-sm ring-1 ring-slate-100 p-5">
+        <h3 class="font-bold text-primary-800 text-sm mb-3">Diesen Monat</h3>
+        <div id="month-list" class="space-y-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div id="booking-modal" class="modal-overlay hidden">
+  <div class="modal-box bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div class="bg-primary-800 px-6 py-5">
+      <div class="flex items-start justify-between">
+        <div>
+          <span id="m-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">Theorie</span>
+          <h3 id="m-title" class="mt-2 text-lg font-bold text-white">Theorieunterricht</h3>
+          <p id="m-meta" class="text-slate-300 text-sm">9. Juni 2026 · 18:00 – 20:00 Uhr</p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <!-- Step 1 -->
+    <div id="step1" class="p-6 space-y-4">
+      <div class="flex gap-3 text-sm text-slate-500 bg-slate-50 rounded-xl p-4">
+        <span id="m-duration" class="flex items-center gap-2 text-xs"><svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>2 Std.</span>
+        <span id="m-spots" class="flex items-center gap-2 text-xs"><svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>4 Plätze frei</span>
+        <span id="m-price" class="flex items-center gap-2 text-xs"><svg class="h-4 w-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>inklusive</span>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">Vollständiger Name</label>
+        <input id="m-name" type="text" placeholder="Max Mustermann" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">E-Mail-Adresse</label>
+        <input id="m-email" type="email" placeholder="max@beispiel.de" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">Telefon</label>
+          <input type="tel" placeholder="0123 456789" class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">Führerscheinkl.</label>
+          <select class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition bg-white">
+            <option>Klasse B</option><option>Klasse A</option><option>Klasse A2</option><option>Klasse BE</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="showStep2()" class="w-full rounded-xl bg-primary-800 py-3 text-sm font-semibold text-white hover:bg-primary-700 transition-all mt-2">
+        Weiter zur Buchung
+      </button>
+    </div>
+    <!-- Step 2 -->
+    <div id="step2" class="hidden p-6 space-y-5">
+      <div class="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
+        <div class="flex justify-between"><span class="text-slate-500">Kurs</span><span id="s2-title" class="font-semibold text-primary-800">Theorieunterricht</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Datum</span><span id="s2-date" class="font-semibold text-primary-800">9. Juni 2026</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Uhrzeit</span><span id="s2-time" class="font-semibold text-primary-800">18:00 – 20:00 Uhr</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Teilnehmer</span><span id="s2-name" class="font-semibold text-primary-800">Max Mustermann</span></div>
+        <div class="border-t border-slate-200 pt-2 mt-2 flex justify-between">
+          <span class="font-semibold text-slate-700">Gesamtbetrag</span>
+          <span id="s2-price" class="font-bold text-amber-600 text-base">inklusive</span>
+        </div>
+      </div>
+      <div class="flex items-start gap-2 text-xs text-slate-500 bg-blue-50 rounded-xl p-3">
+        <svg class="h-4 w-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Eine Buchungsbestätigung wird per E-Mail gesendet.
+      </div>
+      <div class="flex gap-3">
+        <button onclick="showStep1()" class="flex-1 rounded-xl border-2 border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:border-slate-300 transition">Zurück</button>
+        <button onclick="closeModal()" class="flex-1 rounded-xl bg-amber-500 py-3 text-sm font-semibold text-white hover:bg-amber-600 transition shadow-lg shadow-amber-200">Jetzt verbindlich buchen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-primary-900 text-slate-300 mt-10">
+  <div class="mx-auto max-w-7xl px-6 py-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-lg">FL</div>
+        <div><span class="text-white font-bold text-lg leading-none block">Fahrschule</span><span class="text-amber-400 font-semibold text-xs tracking-widest">LOHRMANN</span></div>
+      </div>
+      <p class="text-sm text-slate-500">© 2026 Fahrschule Lohrmann. Alle Rechte vorbehalten.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const COLORS = {
+  theory:   { badge:'bg-blue-100 text-blue-700',   bg:'bg-blue-500',    dot:'#3b82f6' },
+  firstaid: { badge:'bg-red-100 text-red-700',     bg:'bg-red-500',     dot:'#ef4444' },
+  eye:      { badge:'bg-emerald-100 text-emerald-700', bg:'bg-emerald-500', dot:'#10b981' },
+  exam:     { badge:'bg-purple-100 text-purple-700', bg:'bg-purple-500', dot:'#8b5cf6' },
+  simulator:{ badge:'bg-amber-100 text-amber-700', bg:'bg-amber-500',   dot:'#f59e0b' },
+};
+const LABELS = { theory:'Theorie', firstaid:'Erste Hilfe', eye:'Sehtest', exam:'Prüfung', simulator:'Simulator' };
+const EVENTS = {
+  '2026-6-9':  [{id:'e1', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:4, price:'inklusive', duration:'2 Std.'}],
+  '2026-6-11': [{id:'e2', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:6, price:'inklusive', duration:'2 Std.'}],
+  '2026-6-14': [{id:'e3', title:'Erste Hilfe Kurs', time:'09:00 – 17:00 Uhr', type:'firstaid', spots:2, price:'35 €', duration:'8 Std.'}],
+  '2026-6-15': [{id:'e4', title:'Erste Hilfe Kurs', time:'09:00 – 17:00 Uhr', type:'firstaid', spots:2, price:'35 €', duration:'8 Std.'}],
+  '2026-6-16': [{id:'e5', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:8, price:'inklusive', duration:'2 Std.'}],
+  '2026-6-18': [
+    {id:'e6', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:5, price:'inklusive', duration:'2 Std.'},
+    {id:'e7', title:'Sehtest & Passbilder', time:'16:00 – 17:30 Uhr', type:'eye', spots:4, price:'25 €', duration:'1,5 Std.'}
+  ],
+  '2026-6-21': [{id:'e8', title:'Sehtest & Passbilder', time:'10:00 – 12:00 Uhr', type:'eye', spots:3, price:'25 €', duration:'2 Std.'}],
+  '2026-6-23': [{id:'e9', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:7, price:'inklusive', duration:'2 Std.'}],
+  '2026-6-25': [{id:'e10', title:'Theorieunterricht', time:'18:00 – 20:00 Uhr', type:'theory', spots:6, price:'inklusive', duration:'2 Std.'}],
+  '2026-6-27': [{id:'e11', title:'Theorieprüfung Vorbereitung', time:'10:00 – 13:00 Uhr', type:'exam', spots:5, price:'kostenlos', duration:'3 Std.'}],
+  '2026-6-30': [{id:'e12', title:'Theorieprüfung', time:'10:00 – 11:30 Uhr', type:'exam', spots:10, price:'auf Anfrage', duration:'1,5 Std.'}],
+};
+
+let cur = { year:2026, month:5 };
+let selDate = null;
+let activeFilter = 'all';
+let activeEvent = null;
+
+function key(y,m,d){ return `${y}-${m+1}-${d}`; }
+function todayKey(){ const t=new Date(); return key(t.getFullYear(),t.getMonth(),t.getDate()); }
+
+function setFilter(f){
+  activeFilter=f;
+  ['all','theory','firstaid','eye','exam'].forEach(x=>{
+    const btn=document.getElementById('f-'+x);
+    if(x===f){
+      if(f==='all') btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-primary-800 text-white transition-all';
+      else if(f==='theory') btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-500 text-white transition-all shadow';
+      else if(f==='firstaid') btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500 text-white transition-all shadow';
+      else if(f==='eye') btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500 text-white transition-all shadow';
+      else if(f==='exam') btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500 text-white transition-all shadow';
+    } else {
+      btn.className='px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-500 ring-1 ring-slate-200 hover:ring-slate-300 transition-all';
+    }
+  });
+  renderCalendar();
+  if(selDate) showDayEvents(selDate);
+}
+
+function prevMonth(){ if(cur.month===0){cur.year--;cur.month=11;}else{cur.month--;} renderCalendar(); }
+function nextMonth(){ if(cur.month===11){cur.year++;cur.month=0;}else{cur.month++;} renderCalendar(); }
+
+function renderCalendar(){
+  document.getElementById('month-label').textContent=`${MONTHS[cur.month]} ${cur.year}`;
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const daysInMonth=new Date(cur.year,cur.month+1,0).getDate();
+  const rawFirst=new Date(cur.year,cur.month,1).getDay();
+  const startDay=(rawFirst+6)%7;
+  const tk=todayKey();
+
+  // prev month blanks
+  const pm=cur.month===0?11:cur.month-1;
+  const py=cur.month===0?cur.year-1:cur.year;
+  const dprev=new Date(py,pm+1,0).getDate();
+  for(let i=startDay-1;i>=0;i--){
+    const d=document.createElement('div');
+    d.className='day-cell other border-r border-b border-slate-100 p-1.5';
+    d.innerHTML=`<span class="text-xs font-semibold text-slate-300">${dprev-i}</span>`;
+    grid.appendChild(d);
+  }
+
+  for(let day=1;day<=daysInMonth;day++){
+    const k=key(cur.year,cur.month,day);
+    const evts=(EVENTS[k]||[]).filter(e=>activeFilter==='all'||e.type===activeFilter);
+    const allEvts=EVENTS[k]||[];
+    const isToday=k===tk;
+    const isSel=k===selDate;
+    const idx=startDay+(day-1);
+    const isWeekend=idx%7>=5;
+
+    const d=document.createElement('div');
+    d.className=`day-cell border-r border-b border-slate-100 p-1.5${isToday?' today':''}${isSel?' selected':''}${isWeekend?' bg-slate-50/50':''}`;
+    d.onclick=()=>selectDate(k);
+
+    let evHTML='';
+    for(let i=0;i<Math.min(evts.length,2);i++){
+      const e=evts[i];
+      evHTML+=`<div class="rounded px-1 py-0.5 text-[9px] font-semibold truncate ${COLORS[e.type].badge}">${e.title}</div>`;
+    }
+    if(evts.length>2) evHTML+=`<span class="text-[9px] text-slate-400 pl-1">+${evts.length-2} mehr</span>`;
+
+    d.innerHTML=`
+      <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${isToday?'bg-amber-500 text-white':isWeekend?'text-slate-400':'text-slate-700'}">${day}</span>
+      <div class="mt-1 flex flex-col gap-0.5">${evHTML}</div>`;
+    grid.appendChild(d);
+  }
+
+  // next month fill
+  const nm=cur.month===11?0:cur.month+1;
+  const ny=cur.month===11?cur.year+1:cur.year;
+  let fill=42-grid.children.length;
+  for(let i=1;i<=fill;i++){
+    const d=document.createElement('div');
+    d.className='day-cell other border-r border-b border-slate-100 p-1.5';
+    d.innerHTML=`<span class="text-xs font-semibold text-slate-300">${i}</span>`;
+    grid.appendChild(d);
+  }
+
+  renderMonthList();
+}
+
+function selectDate(k){
+  selDate=selDate===k?null:k;
+  renderCalendar();
+  if(selDate) showDayEvents(k);
+  else{
+    document.getElementById('sel-date-label').textContent='Termin auswählen';
+    document.getElementById('sel-count').textContent='Klicken Sie auf einen Tag im Kalender';
+    document.getElementById('event-list').innerHTML=`<div class="flex flex-col items-center justify-center py-10 text-slate-300"><svg class="h-12 w-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><p class="text-sm text-center">Wählen Sie einen Termin im Kalender aus</p></div>`;
+  }
+}
+
+function showDayEvents(k){
+  const [y,m,d]=k.split('-').map(Number);
+  const label=`${d}. ${MONTHS[m-1]} ${y}`;
+  const evts=(EVENTS[k]||[]).filter(e=>activeFilter==='all'||e.type===activeFilter);
+  document.getElementById('sel-date-label').textContent=label;
+  document.getElementById('sel-count').textContent=`${evts.length} Veranstaltung(en)`;
+
+  if(!evts.length){
+    document.getElementById('event-list').innerHTML=`<div class="flex flex-col items-center justify-center py-10 text-slate-300"><svg class="h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p class="text-sm text-slate-400">Keine Termine an diesem Tag</p></div>`;
+    return;
+  }
+
+  const list=document.getElementById('event-list');
+  list.innerHTML='';
+  evts.forEach(ev=>{
+    const div=document.createElement('div');
+    div.className='rounded-xl border border-slate-100 p-4 hover:border-primary-100 hover:bg-slate-50 transition-all';
+    div.innerHTML=`
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${COLORS[ev.type].badge}">${LABELS[ev.type]}</span>
+          <h4 class="mt-2 font-semibold text-primary-800 text-sm">${ev.title}</h4>
+          <p class="text-xs text-slate-400 mt-0.5">${ev.time}</p>
+        </div>
+        <span class="text-sm font-bold text-amber-600 shrink-0">${ev.price}</span>
+      </div>
+      <div class="mt-3 flex items-center justify-between">
+        <span class="text-xs text-slate-400"><span class="font-semibold ${ev.spots<=2?'text-red-500':'text-emerald-600'}">${ev.spots}</span> Plätze frei · ${ev.duration}</span>
+        <button onclick='openModal(${JSON.stringify(ev)}, "${label}")' class="text-xs font-semibold bg-primary-800 text-white px-3 py-1.5 rounded-lg hover:bg-primary-700 transition-colors">Buchen</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function renderMonthList(){
+  const list=document.getElementById('month-list');
+  list.innerHTML='';
+  const entries=Object.entries(EVENTS).filter(([k])=>{
+    const [y,m]=k.split('-').map(Number);
+    return y===cur.year&&m===cur.month+1;
+  });
+  if(!entries.length){
+    list.innerHTML='<p class="text-xs text-slate-400">Keine Termine in diesem Monat</p>';
+    return;
+  }
+  entries.forEach(([k,evts])=>{
+    const [y,m,d]=k.split('-').map(Number);
+    evts.forEach(ev=>{
+      const div=document.createElement('div');
+      div.className='flex items-center gap-3 text-xs cursor-pointer hover:bg-slate-50 -mx-1 px-1 py-1 rounded-lg transition-colors';
+      div.onclick=()=>selectDate(k);
+      div.innerHTML=`<span class="h-2 w-2 rounded-full shrink-0" style="background:${COLORS[ev.type].dot}"></span><span class="text-slate-400 shrink-0 w-16">${d}. ${MONTHS[m-1].slice(0,3)}.</span><span class="text-slate-600 truncate">${ev.title}</span>`;
+      list.appendChild(div);
+    });
+  });
+}
+
+function openModal(ev, dateLabel){
+  activeEvent={ev,dateLabel};
+  document.getElementById('m-badge').className=`text-xs font-semibold px-2.5 py-1 rounded-full ${COLORS[ev.type].badge}`;
+  document.getElementById('m-badge').textContent=LABELS[ev.type];
+  document.getElementById('m-title').textContent=ev.title;
+  document.getElementById('m-meta').textContent=`${dateLabel} · ${ev.time}`;
+  document.getElementById('m-duration').innerHTML=`<svg class="h-4 w-4 text-amber-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${ev.duration}`;
+  document.getElementById('m-spots').innerHTML=`<svg class="h-4 w-4 text-amber-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>${ev.spots} Plätze frei`;
+  document.getElementById('m-price').innerHTML=`<svg class="h-4 w-4 text-amber-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>${ev.price}`;
+  showStep1();
+  document.getElementById('booking-modal').classList.remove('hidden');
+}
+
+function closeModal(){ document.getElementById('booking-modal').classList.add('hidden'); }
+function showStep1(){ document.getElementById('step1').classList.remove('hidden'); document.getElementById('step2').classList.add('hidden'); }
+function showStep2(){
+  if(!activeEvent) return;
+  const name=document.getElementById('m-name').value||'Max Mustermann';
+  document.getElementById('s2-title').textContent=activeEvent.ev.title;
+  document.getElementById('s2-date').textContent=activeEvent.dateLabel;
+  document.getElementById('s2-time').textContent=activeEvent.ev.time;
+  document.getElementById('s2-name').textContent=name;
+  document.getElementById('s2-price').textContent=activeEvent.ev.price;
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+}
+
+renderCalendar();
+</script>
+</body>
+</html>
