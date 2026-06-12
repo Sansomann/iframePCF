@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ─────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: auto; /* Lenis handles smooth scroll */
+}
+
+body {
+  background-color: #0a0a0a;
+  color: #f2ede4;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Film grain overlay ──────────────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.35;
+}
+
+/* ── Typography helpers ──────────────────────────────────────────────────── */
+.font-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+
+.text-display {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+}
+
+.micro-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #c9a84c;
+}
+
+/* ── Line reveal clip ────────────────────────────────────────────────────── */
+.line-reveal-wrapper {
+  overflow: hidden;
+  display: block;
+}
+.line-reveal-inner {
+  display: block;
+  transform: translateY(105%);
+}
+
+/* ── Gold rule ───────────────────────────────────────────────────────────── */
+.gold-rule {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: #c9a84c;
+}
+
+/* ── Button styles ───────────────────────────────────────────────────────── */
+.btn-gold {
+  @apply inline-flex items-center gap-2 border border-gold text-gold text-xs tracking-widest uppercase px-6 py-3 transition-all duration-300;
+  position: relative;
+  overflow: hidden;
+}
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #c9a84c;
+  transform: translateX(-101%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-gold:hover::before {
+  transform: translateX(0);
+}
+.btn-gold:hover {
+  color: #0a0a0a;
+}
+.btn-gold span {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center gap-2 text-cream-muted text-xs tracking-widest uppercase px-5 py-3 transition-all duration-300;
+  position: relative;
+}
+.btn-ghost::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.btn-ghost:hover::after {
+  transform: scaleX(1);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #c9a84c44; border-radius: 2px; }
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .line-reveal-inner { transform: none !important; }
+}
+
+/* ── Marquee pause on hover ──────────────────────────────────────────────── */
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ── Globe canvas ────────────────────────────────────────────────────────── */
+canvas { display: block; }
