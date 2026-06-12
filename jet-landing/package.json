@@ -9,13 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "cobe": "^0.6.3",
+    "three": "^0.165.0",
     "gsap": "^3.12.5",
     "lenis": "^1.1.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/three": "^0.165.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

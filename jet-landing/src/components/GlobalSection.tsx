@@ -3,7 +3,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DESTINATIONS, GLOBE_STATS, BRAND } from '../content'
 import { useCountUp } from '../hooks/useCountUp'
-import GlobeCanvas from './GlobeCanvas'
+import AircraftScene from './AircraftScene'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -119,17 +119,9 @@ export default function GlobalSection() {
 
           {/* Right: Globe */}
           <div className="relative flex items-center justify-center">
-            <div className="w-full max-w-md mx-auto aspect-square">
-              <GlobeCanvas />
+            <div className="w-full aspect-[4/3] relative">
+              <AircraftScene />
             </div>
-            {/* Radial fade at edges */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  'radial-gradient(circle at center, transparent 50%, #111111 80%)',
-              }}
-            />
           </div>
         </div>
       </div>
