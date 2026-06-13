@@ -115,16 +115,20 @@ class GolfTrackerApp {
 
   async _startCamera() {
     try {
+      // iPhone 16: rear main wide (48MP f/1.6) is selected by requesting
+      // high resolution + environment facing — iOS picks the best sensor.
+      // Requesting 4K forces the main sensor over ultra-wide on iOS.
       const constraints = {
         video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 60, min: 30 },
+          facingMode: { exact: 'environment' },
+          width:     { ideal: 3840, min: 1280 },
+          height:    { ideal: 2160, min: 720 },
+          frameRate: { ideal: 60,   min: 30 },
         },
       };
       if (this.settings.cameraId) {
-        constraints.video.deviceId = { ideal: this.settings.cameraId };
+        delete constraints.video.facingMode;
+        constraints.video.deviceId = { exact: this.settings.cameraId };
       }
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
