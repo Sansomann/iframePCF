@@ -58,9 +58,21 @@ class GolfTrackerApp {
     );
     this.tracker.setConfig({ ballColor: this.settings.ballColor });
 
+    this.tracker.addEventListener('watching', () => {
+      this._setState('watching');
+      this._setTrackingStatus('👁 Watching for shot…');
+    });
+
+    this.tracker.addEventListener('shotDetected', () => {
+      this._setTrackingStatus('● TRACKING…', true);
+      this._el['stats-panel'].classList.add('hidden');
+      this._setState('tracking');
+    });
+
     this.tracker.addEventListener('trackingStarted', () => {
       this._el['stats-panel'].classList.add('hidden');
       this._setTrackingStatus('● TRACKING…', true);
+      this._setState('tracking');
     });
 
     this.tracker.addEventListener('shotComplete', (e) => {
@@ -69,8 +81,8 @@ class GolfTrackerApp {
 
     this.tracker.addEventListener('trackingCancelled', () => {
       this._setTrackingStatus('');
-      this._setState('ready');
-      this._toast('Ball not detected – try again', 'warn');
+      // Return to watching so the next shot is auto-detected
+      this.tracker.startWatching();
     });
   }
 
@@ -146,9 +158,10 @@ class GolfTrackerApp {
       await this._el['video'].play();
 
       this.tracker.startLoop();
-      this._setState('ready');
       await this._populateCameras();
       this._startMetrics();
+      // Auto-watching: no button press needed to detect shots
+      this.tracker.startWatching();
     } catch (err) {
       this._showCameraError(err);
     }
@@ -199,7 +212,8 @@ class GolfTrackerApp {
 
   _handleTrackBtn() {
     switch (this._state) {
-      case 'ready': this._startTracking(); break;
+      case 'ready':    this._startTracking(); break;
+      case 'watching': this._startTracking(); break;   // manual override
       case 'tracking': this.tracker.stopTracking(false); break;
       case 'reviewing': this._resetShot(); break;
     }
@@ -216,6 +230,7 @@ class GolfTrackerApp {
     const map = {
       idle:      { icon: '📷', label: 'START',     cls: '' },
       ready:     { icon: '●',  label: 'TRACK',     cls: 'ready' },
+      watching:  { icon: '👁', label: 'WATCHING',  cls: 'watching' },
       tracking:  { icon: '■',  label: 'STOP',      cls: 'active' },
       reviewing: { icon: '↺',  label: 'NEW SHOT',  cls: 'done' },
     };
@@ -250,13 +265,20 @@ class GolfTrackerApp {
     this._showStats(stats);
     this._updateSessionLabel();
     this._setState('reviewing');
+
+    // Auto-return to watching after 5 s so the next shot is detected hands-free
+    clearTimeout(this._reviewTimer);
+    this._reviewTimer = setTimeout(() => {
+      if (this._state === 'reviewing') this._resetShot();
+    }, 5000);
   }
 
   _resetShot() {
-    this.tracker.reset();
+    clearTimeout(this._reviewTimer);
     this._el['stats-panel'].classList.add('hidden');
     this._setTrackingStatus('');
-    this._setState('ready');
+    // reset(true) transitions tracker back to watching state automatically
+    this.tracker.reset(true);
   }
 
   /* ── Demo mode ── */
