@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Tracker — Tests</title>
+  <style>
+    :root { --pass: #00c853; --fail: #ff1744; --bg: #0a0d1a; --card: #121628; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: #e8eaf6;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      padding: 24px; min-height: 100vh;
+    }
+    h1 { font-size: 22px; color: #00d2ff; margin-bottom: 4px; }
+    p.sub { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 24px; }
+    #run { padding: 10px 28px; background: #00d2ff; border: none; border-radius: 8px;
+           color: #000; font-size: 15px; font-weight: 800; cursor: pointer; margin-bottom: 24px; }
+    #run:active { opacity: 0.8; }
+    .suite { margin-bottom: 18px; }
+    .suite-name { font-size: 13px; color: #00d2ff; font-weight: 700;
+                  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .t { padding: 7px 12px; border-radius: 6px; font-size: 13px;
+         margin-bottom: 3px; display: flex; align-items: flex-start; gap: 10px; }
+    .t.pass { background: rgba(0,200,83,0.1); color: var(--pass); }
+    .t.fail { background: rgba(255,23,68,0.1); color: var(--fail); }
+    .t .icon { flex-shrink: 0; font-weight: 900; }
+    .t .err  { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+    .summary {
+      margin-top: 22px; padding: 14px 18px; border-radius: 10px;
+      font-size: 16px; font-weight: 700;
+    }
+    .summary.all-pass { background: rgba(0,200,83,0.15); color: var(--pass); border: 1px solid rgba(0,200,83,0.35); }
+    .summary.has-fail  { background: rgba(255,23,68,0.15); color: var(--fail);  border: 1px solid rgba(255,23,68,0.35); }
+  </style>
+</head>
+<body>
+
+<h1>⛳ Golf Tracker Tests</h1>
+<p class="sub">Unit tests for tracker, physics, and storage modules</p>
+<button id="run">▶ Run All Tests</button>
+<div id="output"></div>
+
+<script src="../js/storage.js"></script>
+<script src="../js/physics.js"></script>
+<script src="../js/tracker.js"></script>
+<script src="storage.test.js"></script>
+<script src="physics.test.js"></script>
+<script src="tracker.test.js"></script>
+<script>
+/* Micro test framework */
+const T = (() => {
+  let suites = [], cur = null, passed = 0, failed = 0;
+
+  return {
+    describe(name) { cur = { name, tests: [] }; suites.push(cur); },
+    test(name, fn) { cur.tests.push({ name, fn }); },
+    ok(cond, msg) { if (!cond) throw new Error(msg || 'Assertion failed'); },
+    equal(a, b, msg) {
+      if (a !== b) throw new Error(msg || `Expected ${JSON.stringify(b)} but got ${JSON.stringify(a)}`);
+    },
+    run() {
+      passed = 0; failed = 0;
+      const out = document.getElementById('output');
+      out.innerHTML = '';
+      for (const suite of suites) {
+        const sd = document.createElement('div'); sd.className = 'suite';
+        const sn = document.createElement('div'); sn.className = 'suite-name';
+        sn.textContent = suite.name; sd.appendChild(sn);
+        for (const t of suite.tests) {
+          let ok = true, err = '';
+          try { t.fn(); } catch (e) { ok = false; err = e.message; }
+          ok ? passed++ : failed++;
+          const el = document.createElement('div'); el.className = 't ' + (ok ? 'pass' : 'fail');
+          el.innerHTML = `<span class="icon">${ok ? '✓' : '✗'}</span><span>${t.name}${err ? '<br><span class="err">↳ ' + err + '</span>' : ''}</span>`;
+          sd.appendChild(el);
+        }
+        out.appendChild(sd);
+      }
+      const sum = document.createElement('div');
+      sum.className = 'summary ' + (failed === 0 ? 'all-pass' : 'has-fail');
+      sum.textContent = `${passed + failed} tests — ${passed} passed, ${failed} failed`;
+      out.appendChild(sum);
+    }
+  };
+})();
+
+storageTests(T);
+physicsTests(T);
+trackerTests(T);
+
+document.getElementById('run').addEventListener('click', () => T.run());
+// Auto-run
+T.run();
+</script>
+</body>
+</html>
