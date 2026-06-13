@@ -1,0 +1,18 @@
+{
+  "name": "Golf Ball Tracker",
+  "short_name": "Golf Tracker",
+  "description": "Track golf shots with real-time ball detection and trajectory visualization",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#00d2ff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000'/><circle cx='96' cy='96' r='70' fill='%2300d2ff' opacity='.2'/><circle cx='96' cy='96' r='30' fill='%2300d2ff'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
