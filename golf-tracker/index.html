@@ -116,6 +116,49 @@
         <button id="btn-export" class="action-btn btn-primary">Export Shots (JSON)</button>
         <button id="btn-clear"  class="action-btn btn-danger">Clear All History</button>
 
+        <!-- ── Live camera metrics ── -->
+        <div class="metrics-section">
+          <div class="metrics-head">
+            <span>Live Camera</span>
+            <span class="metrics-live-dot" id="metrics-live-dot"></span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-cell">
+              <span class="mc-val" id="m-label">—</span>
+              <span class="mc-lbl">Lens</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-res">—</span>
+              <span class="mc-lbl">Resolution</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-fps">—</span>
+              <span class="mc-lbl">FPS (live)</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-facing">—</span>
+              <span class="mc-lbl">Facing</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-zoom">—</span>
+              <span class="mc-lbl">Zoom</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-torch">—</span>
+              <span class="mc-lbl">Torch</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-focus">—</span>
+              <span class="mc-lbl">Focus mode</span>
+            </div>
+            <div class="metric-cell">
+              <span class="mc-val" id="m-expo">—</span>
+              <span class="mc-lbl">Exposure</span>
+            </div>
+          </div>
+          <div class="metric-cap-row" id="m-cap-fps"></div>
+        </div>
+
         <div class="info-section">
           <h3>Tips for best tracking</h3>
           <ul>

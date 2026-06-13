@@ -388,6 +388,60 @@ html, body {
   color: #000; font-size: 16px; font-weight: 800; cursor: pointer;
 }
 
+/* ── Live camera metrics ── */
+
+.metrics-section {
+  margin-top: 28px; margin-bottom: 20px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.metrics-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0,210,255,0.07);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--cyan);
+}
+
+.metrics-live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+  animation: blink 1.4s infinite;
+}
+.metrics-live-dot.off { background: rgba(255,255,255,0.2); animation: none; }
+
+.metrics-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+
+.metric-cell {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.metric-cell:nth-child(odd) { border-right: 1px solid var(--border); }
+.metric-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+.mc-val {
+  font-size: 14px; font-weight: 800; color: var(--txt);
+  font-variant-numeric: tabular-nums; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mc-lbl {
+  font-size: 9.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--txt2);
+}
+
+.metric-cap-row {
+  padding: 8px 14px;
+  font-size: 11px; color: var(--txt2); line-height: 1.5;
+  border-top: 1px solid var(--border);
+  min-height: 0;
+}
+.metric-cap-row:empty { display: none; }
+
 /* ── Version badge ── */
 #version {
   position: fixed; bottom: calc(var(--safe-b) + 4px); right: 8px;

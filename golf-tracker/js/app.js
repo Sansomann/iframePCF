@@ -10,6 +10,12 @@ class GolfTrackerApp {
     this.settings = this.storage.getSettings();
     this.currentStats = null;
 
+    // FPS counter state
+    this._fpsFrames = 0;
+    this._fpsLast = performance.now();
+    this._fpsValue = 0;
+    this._metricsInterval = null;
+
     this._el = {};
     this._grabElements();
     this._buildTracker();
@@ -34,6 +40,10 @@ class GolfTrackerApp {
       'sel-ball-color', 'inp-known-dist', 'sel-camera',
       'btn-clear', 'btn-export',
       'toast-container',
+      // metrics
+      'metrics-live-dot',
+      'm-label', 'm-res', 'm-fps', 'm-facing',
+      'm-zoom', 'm-torch', 'm-focus', 'm-expo', 'm-cap-fps',
     ];
     ids.forEach((id) => {
       this._el[id] = document.getElementById(id);
@@ -138,6 +148,7 @@ class GolfTrackerApp {
       this.tracker.startLoop();
       this._setState('ready');
       await this._populateCameras();
+      this._startMetrics();
     } catch (err) {
       this._showCameraError(err);
     }
@@ -169,6 +180,7 @@ class GolfTrackerApp {
       });
       this._el['video'].srcObject = this.stream;
       await this._el['video'].play();
+      this._startMetrics();
     } catch (err) {
       this._toast('Could not switch camera', 'error');
     }
@@ -278,6 +290,7 @@ class GolfTrackerApp {
 
   _openPanel(name) {
     if (name === 'history') this._renderHistory();
+    if (name === 'settings') this._updateMetrics(0);
     this._el[`${name}-panel`].classList.add('open');
   }
 
@@ -373,6 +386,105 @@ class GolfTrackerApp {
     a.download = `golf-shots-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  /* ── Live camera metrics ── */
+
+  _startMetrics() {
+    if (this._metricsInterval) clearInterval(this._metricsInterval);
+
+    // Count frames for live FPS
+    const video = this._el['video'];
+    let lastFrameCount = video.webkitDecodedFrameCount ?? 0;
+
+    this._metricsInterval = setInterval(() => {
+      this._updateMetrics(lastFrameCount);
+      lastFrameCount = video.webkitDecodedFrameCount ?? lastFrameCount;
+    }, 1000);
+
+    // First render immediately
+    this._updateMetrics(0);
+  }
+
+  _stopMetrics() {
+    if (this._metricsInterval) {
+      clearInterval(this._metricsInterval);
+      this._metricsInterval = null;
+    }
+    this._el['metrics-live-dot'].classList.add('off');
+  }
+
+  _updateMetrics(prevFrameCount) {
+    if (!this.stream) return;
+
+    const track = this.stream.getVideoTracks()[0];
+    if (!track || track.readyState !== 'live') {
+      this._stopMetrics();
+      return;
+    }
+
+    const s = track.getSettings();
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    const video = this._el['video'];
+
+    // Live FPS via decoded frame counter (webkit) or requestVideoFrameCallback
+    const currentFrames = video.webkitDecodedFrameCount ?? 0;
+    const fps = currentFrames - prevFrameCount;
+
+    // Clean up label — strip internal iOS suffixes like " Back Camera"
+    const rawLabel = track.label || '—';
+    const shortLabel = rawLabel
+      .replace(/\s*(Back|Front|Camera|Video)\s*/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || rawLabel;
+
+    // Resolution: prefer actual video element dimensions (what's being rendered)
+    const w = s.width  || video.videoWidth;
+    const h = s.height || video.videoHeight;
+    const res = w && h ? `${w}×${h}` : '—';
+
+    // Facing
+    const facing = s.facingMode
+      ? (s.facingMode === 'environment' ? 'Rear' : 'Front')
+      : '—';
+
+    // Zoom
+    const zoom = s.zoom != null
+      ? `${s.zoom.toFixed(1)}×`
+      : (caps.zoom ? '1.0×' : 'N/A');
+
+    // Torch
+    const torch = caps.torch != null
+      ? (s.torch ? 'On' : 'Off')
+      : 'N/A';
+
+    // Focus mode
+    const focus = s.focusMode
+      ? s.focusMode.replace('continuous', 'cont.').replace('manual', 'manual')
+      : (caps.focusMode ? caps.focusMode[0] : '—');
+
+    // Exposure mode
+    const expo = s.exposureMode
+      ? s.exposureMode.replace('continuous', 'auto').replace('manual', 'manual')
+      : (caps.exposureMode ? caps.exposureMode[0] : '—');
+
+    // FPS capability range
+    const fpsRange = caps.frameRate
+      ? `Max capable: ${Math.round(caps.frameRate.min)}–${Math.round(caps.frameRate.max)} fps`
+      : '';
+
+    // Populate
+    this._el['m-label'].textContent   = shortLabel;
+    this._el['m-res'].textContent     = res;
+    this._el['m-fps'].textContent     = fps > 0 ? `${fps} fps` : `${Math.round(s.frameRate || 0)} fps`;
+    this._el['m-facing'].textContent  = facing;
+    this._el['m-zoom'].textContent    = zoom;
+    this._el['m-torch'].textContent   = torch;
+    this._el['m-focus'].textContent   = focus;
+    this._el['m-expo'].textContent    = expo;
+    this._el['m-cap-fps'].textContent = fpsRange;
+
+    this._el['metrics-live-dot'].classList.remove('off');
   }
 }
 
