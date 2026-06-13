@@ -1,6 +1,6 @@
 /* Service worker — offline-first cache */
 
-const CACHE = 'golf-tracker-v1';
+const CACHE = 'golf-tracker-v3';
 const ASSETS = [
   './',
   './index.html',
